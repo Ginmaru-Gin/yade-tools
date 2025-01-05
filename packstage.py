@@ -52,8 +52,8 @@ def create_spheres(
     return mixture
 
 
-def run_parallel_layers(number: int, worker_number: int) -> list[str]:
-    filenames = [f"spheres_{i}" for i in range(number)]
+def run_parallel_layers(number: int, worker_number: int, yade_command: str, particles_per_layer: int, pack_id: int = 0) -> list[str]:
+    filenames = [f"spheres_{pack_id}_{i}" for i in range(number)]
     log_filenames = {f + ".log" for f in filenames}
     for filename in filenames:
         try:
@@ -63,15 +63,16 @@ def run_parallel_layers(number: int, worker_number: int) -> list[str]:
     procs = [
         Popen(
             [
-                "yade",
+                yade_command,
                 "-nxj " + str(worker_number // number),
                 sys.argv[0],
-                str(i),
+                filename,
+                str(particles_per_layer),
                 ">",
                 log_file,
             ]
         )
-        for i, log_file in zip(range(number), log_filenames)
+        for filename, log_file in zip(filenames, log_filenames)
     ]
     for proc in procs:
         while proc.poll() is None:
